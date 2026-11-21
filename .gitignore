@@ -1,0 +1,34 @@
+# Python environments
+.venv/
+venv/
+env/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Build artifacts
+build/
+dist/
+
+# IDE and OS files
+.DS_Store
+.vscode/
+.idea/
+*.bak
+*.swp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated datasets
+data/generated/
+data/processed/
+
+# Generated result visualizations and reports
+results/figures/
+results/metrics/
+results/reports/

@@ -1,0 +1,54 @@
+{
+  "experiment": "balanced_two_link_communication_localization",
+  "simulation_type": "deterministic_two_pass_simulator",
+  "purpose": "Controlled diagnostic experiment with balanced worker-pair assignments and an L2 negative-control link.",
+  "training_seed": 42,
+  "calibration_seed": 43,
+  "boundary_training_seed": 46,
+  "boundary_calibration_seed": 47,
+  "workload_seed": 45,
+  "request_count": 1000,
+  "prompt_tokens": 4096,
+  "output_tokens": 128,
+  "arrival_rate_per_ms": 0.02,
+  "kv_cache_mb_per_prompt_token": 0.01,
+  "worker_pair_assignments": {
+    "P1->D1": 250,
+    "P1->D2": 250,
+    "P2->D1": 250,
+    "P2->D2": 250
+  },
+  "expected_link_counts": {
+    "L1": 500,
+    "L2": 500
+  },
+  "fault": {
+    "type": "communication",
+    "component": "L1",
+    "severity": 0.5,
+    "interval_ms": [
+      0.0,
+      1000000.0
+    ]
+  },
+  "reference": {
+    "workload_conditioned": true,
+    "min_samples": 20
+  },
+  "anomaly_detector": {
+    "quantile": 0.99,
+    "min_samples": 100
+  },
+  "persistence": {
+    "strategy": "strict_time_window_density",
+    "window_duration_ms": 500,
+    "min_anomalies": 3,
+    "require_current_anomaly": true,
+    "component_specific": true
+  },
+  "confidence_reference_sample_target": 100,
+  "confidence_calibration_sample_target": 500,
+  "detector_inputs": "telemetry_only",
+  "ground_truth_used_for_detection": false,
+  "routing_interpretation": "Externally assigned worker pairs for controlled route coverage; not natural shortest-queue scheduler behavior."
+}

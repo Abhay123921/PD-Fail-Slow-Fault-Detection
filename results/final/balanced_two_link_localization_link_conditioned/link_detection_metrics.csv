@@ -1,0 +1,7 @@
+scenario,link_id,link_role,transfer_observations,raw_scored_observations,raw_anomalies,raw_anomaly_rate,persistent_scored_observations,persistent_anomalies,persistent_anomaly_rate,TP,FN,FP,TN
+healthy,L1,healthy_baseline,500,500,0,0.0,500,0,0.0,,,,
+healthy,L2,healthy_baseline,500,500,0,0.0,500,0,0.0,,,,
+l1_fault,L1,fault_target,500,500,500,1.0,500,498,0.996,498.0,2.0,,
+l1_fault,L2,negative_control,500,500,0,0.0,500,0,0.0,,,0.0,500.0
+l2_fault,L1,negative_control,500,500,0,0.0,500,0,0.0,,,0.0,500.0
+l2_fault,L2,fault_target,500,500,500,1.0,500,498,0.996,498.0,2.0,,

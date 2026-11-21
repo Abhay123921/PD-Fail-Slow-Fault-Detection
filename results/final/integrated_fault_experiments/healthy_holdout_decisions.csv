@@ -1,0 +1,6 @@
+profile,request_count,status,is_fault_suspected,fault_type,component_type,component_id,localization_rank,evidence_count,mean_evidence_quality_score,scored_stage_count,total_stage_count,anomalous_observation_count,direct_anomalous_observation_count,persistent_direct_anomaly_count,context_anomalous_observation_count,persistent_context_evidence_count,candidate_fault_types,reason
+stable,1000,healthy,False,,,,,0,,6,6,0,0,0,0,0,[],all_stages_scored_without_anomalies
+long_prompt,1000,insufficient_evidence,False,,,,,0,,6,6,44,44,1,0,0,[],direct_anomalies_below_persistence_evidence_threshold
+long_output,1000,workload_pressure,False,,,,,0,,6,6,139,56,0,83,41,[],context_pressure_without_persistent_direct_evidence
+high_arrival,1000,healthy,False,,,,,0,,6,6,0,0,0,0,0,[],all_stages_scored_without_anomalies
+mixed,1000,workload_pressure,False,,,,,0,,6,6,149,42,0,107,99,[],context_pressure_without_persistent_direct_evidence

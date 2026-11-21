@@ -1,0 +1,9 @@
+stage,calibration_scope,link_type,configured_bandwidth_mb_per_ms,threshold_ms,calibration_samples
+prefill_service_time_ms,global,,,24.30999999999949,6000
+prefill_queue_wait_ms,global,,,202.80228558421223,6000
+transfer_time_ms,global,,,0.5667649999999416,6000
+handoff_wait_ms,global,,,1e-06,6000
+admission_wait_ms,global,,,66.72634604743195,6000
+decode_service_time_ms,global,,,49.95100000000167,6000
+transfer_time_ms,link_conditioned,PCIe,20.0,0.5984249999990106,3974
+transfer_time_ms,link_conditioned,NVLink,80.0,0.15534375000061118,2026

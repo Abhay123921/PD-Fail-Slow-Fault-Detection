@@ -1,0 +1,15 @@
+workload:
+  num_requests: 2000
+  arrival:
+    distribution: poisson
+    rate_per_ms: 0.03
+  prompt_length:
+    distribution: uniform
+    min_tokens: 128
+    max_tokens: 2048
+  output_length:
+    distribution: uniform
+    min_tokens: 32
+    max_tokens: 512
+  batch:
+    enabled: false

@@ -1,270 +1,303 @@
-# Workload-Aware Detection and Localization of Fail-Slow Faults in PD-Disaggregated LLM Inference Systems
+# PD-Fail-Slow-Fault-Detection# Workload-Aware Detection and Localization of Fail-Slow Faults in PD-Disaggregated LLM Inference Systems
 
-**Course:** Distributed AI Learning  
-**Student:** Abhay Raj Singh  
-**Roll Number:** AI26RESCH11004  
-**Institution:** Indian Institute of Technology Hyderabad
+**Course:** CS5903 – Distributed AI Training  
+**Institution:** Indian Institute of Technology Hyderabad  
+**Project ID:** 25  
+**Group:** 21
 
 ## 1. Overview
 
-Large Language Model (LLM) inference systems increasingly use **Prefill-Decode (PD) disaggregation**, where prefill and decode operations run on separate workers. This separation allows the two stages to be managed independently, but it also introduces additional components and communication paths that can affect end-to-end latency.
+Disaggregated Large Language Model (LLM) inference separates **prefill** and **decode** computation into different worker pools. This architecture can improve resource utilization, but it also introduces additional communication and synchronization stages.
 
-A key challenge is detecting **fail-slow faults**: situations where a worker or communication link continues to operate but performs more slowly than expected.
+A slowdown may originate from compute degradation, communication bottlenecks, or synchronization delays. Identifying the responsible component is difficult because workload variation and resource contention can also increase latency.
 
-Not every increase in latency indicates a fault. Longer prompts, different batch sizes, increased request arrivals, execution configurations, and resource contention can also increase latency.
+This project develops a simulator-based framework for **workload-aware detection and localization of fail-slow faults** in prefill-decode (PD) disaggregated LLM inference systems.
 
-This project proposes a workload-aware approach to detecting candidate slowdowns, distinguishing workload-induced latency from possible component degradation, and localizing faults to prefill workers, decode workers, or KV-cache transfer links.
+The framework models the inference pipeline, collects stage-level telemetry, learns healthy workload-conditioned references, detects persistent anomalies, ranks potential fault locations, and supports abstention when the available evidence is insufficient.
 
-> **Current status:** Problem analysis, literature study, and system design have been completed. Simulator implementation, fault injection, detection algorithms, and quantitative evaluation are planned next steps.
+> **Scope:** This is a software simulation study. It does not evaluate a deployment on physical GPUs or a production LLM serving system.
 
-## 2. Problem Statement
+## 2. System Architecture
 
-Conventional fixed-threshold monitoring can generate false alarms when workload characteristics change. Historical baselines can become contaminated by faults, while peer-based comparisons can fail when multiple workers experience the same degradation.
+The simulated system contains:
 
-The central research question is:
+- **Prefill workers:** P1 and P2
+- **Decode workers:** D1 and D2
+- **Communication links:** L1 and L2
 
-**How can fail-slow faults be detected and localized in PD-disaggregated LLM inference systems without confusing normal workload variation with component-induced performance degradation?**
+The request execution pipeline is divided into six measurable stages:
 
-The project investigates whether workload-aware references, multiple sources of system evidence, and confidence-weighted historical and peer comparisons can improve detection and localization compared with simpler baselines.
+1. Prefill queue wait
+2. Prefill execution
+3. KV-cache transfer
+4. Handoff and synchronization wait
+5. Decode admission wait
+6. Decode execution
 
-## 3. System Model
+The framework uses stage-level telemetry to distinguish where latency increases occur.
 
-The target system consists of three main component types:
+## 3. Detection and Localization Pipeline
 
-- **Prefill workers:** Process input tokens and generate the Key-Value (KV) cache.
-- **KV-cache transfer links:** Transfer KV-cache data from prefill workers to decode workers.
-- **Decode workers:** Generate output tokens using the input context and KV cache.
+The implemented pipeline consists of the following stages:
 
-A simplified request path is:
+1. **Healthy reference modelling:** Learns expected stage behaviour under different workload conditions.
+2. **Residual computation:** Compares observed stage metrics against their healthy reference values.
+3. **Anomaly detection:** Identifies stage-level deviations using calibrated thresholds.
+4. **Temporal persistence:** Filters transient anomalies using persistence-based detection.
+5. **Evidence assessment:** Evaluates the available evidence and its quality.
+6. **Fault attribution:** Ranks potential fault locations using anomaly evidence.
+7. **Diagnosis:** Produces a diagnosis or abstains when the evidence is insufficient.
+
+For an observation \(y_{i,m}\) and its expected reference \(\hat{y}_{i,m}\), the residual is:
+
+\[
+r_{i,m}=y_{i,m}-\hat{y}_{i,m}
+\]
+
+The evidence-quality score is a heuristic score, not a calibrated probability. Similarly, component attribution represents evidence-based ranking rather than causal proof.
+
+### Heterogeneous communication links
+
+The project additionally evaluates heterogeneous communication links:
+
+- L1: PCIe, configured bandwidth 20 MB/ms
+- L2: NVLink, configured bandwidth 80 MB/ms
+
+A global transfer threshold can be inadequate when healthy latency distributions differ across links. An optional link-conditioned transfer-threshold mode therefore calibrates separate healthy thresholds for known link configurations.
+
+## 4. Fault Scenarios
+
+The integrated experiments evaluate three controlled fault categories:
+
+| Fault category | Injected location |
+|---|---|
+| Compute degradation | Prefill worker P1 |
+| Communication degradation | Communication link L1 |
+| Synchronization delay | D2 handoff |
+
+Additional balanced two-link experiments evaluate communication degradation on L1 and L2 separately.
+
+## 5. Experimental Results
+
+The following are selected results from the completed simulator experiments.
+
+### 5.1 Healthy workload characterization
+
+Five workload profiles were evaluated using two seeds and 1,000 requests per profile and seed.
+
+| Workload profile | Mean E2E latency (ms) | P95 E2E latency (ms) |
+|---|---:|---:|
+| Stable | 17.20 | 17.20 |
+| High arrival | 21.30 | 33.87 |
+| Long prompt | 70.74 | 121.03 |
+| Long output | 98.98 | 194.99 |
+| Mixed | 141.36 | 345.66 |
+
+The results demonstrate that workload variation alone can substantially increase end-to-end latency. This motivates workload-conditioned healthy references.
+
+### 5.2 Integrated fault detection
+
+At 50% injected severity, the integrated detection pipeline localized all three evaluated fault categories.
+
+| Fault category | Target-stage recall |
+|---|---:|
+| Compute degradation | 99.40% |
+| Communication degradation | 99.80% |
+| Synchronization delay | 99.60% |
+
+Precision was 1.0 for the evaluated target fault cases.
+
+These results apply to the controlled scenarios and configurations tested; they should not be interpreted as general production-system performance.
+
+### 5.3 Persistence ablation
+
+The persistence experiments compared count-based, time-aware, and density-based strategies using workload-conditioned and global healthy references.
+
+Under the evaluated healthy communication holdout:
+
+- Workload-conditioned ordinary density persistence produced 11 false positives per 5,000 observations.
+- Workload-conditioned strict-density persistence produced 3 false positives per 5,000 observations.
+- Global strict-density persistence produced 1 false positive per 5,000 observations.
+
+Strict-density persistence reduced false positives compared with ordinary density persistence in the evaluated holdout. The selected persistence strategy was workload-conditioned healthy references combined with strict-density persistence.
+
+### 5.4 Heterogeneous two-link localization
+
+The global transfer threshold detected the tested L1 fault but missed the tested L2 fault because the healthy latency distributions differed between the two link configurations.
+
+With link-conditioned transfer thresholds:
+
+| Metric | Global threshold | Link-conditioned threshold |
+|---|---:|---:|
+| Healthy false-positive rate | 0% | 0% |
+| L1 fault persistent detection | 99.6% | 99.6% |
+| L2 fault persistent detection | 0% | 99.6% |
+| Detection across both tested fault scenarios | 49.8% | 99.6% |
+
+The improvement is **49.8 percentage points** across the two tested link-fault scenarios.
+
+This demonstrates the importance of accounting for heterogeneous communication configurations when calibrating healthy transfer behaviour.
+
+## 6. Repository Structure
 
 ```text
-Incoming Request
-       |
-       v
- Prefill Worker
-       |
-       | KV-cache transfer
-       v
- Transfer Link
-       |
-       v
-  Decode Worker
-       |
-       v
- Generated Response
+PD-Fail-Slow-Fault-Detection/
+│
+├── configs/
+│   ├── detection.yaml
+│   ├── faults.yaml
+│   ├── system.yaml
+│   └── workload.yaml
+│
+├── data/
+│
+├── docs/
+│   ├── Project_Report.pdf
+│   └── Architecture_Decision_Records.md
+│
+├── results/
+│   └── final/
+│       ├── healthy_characterization/
+│       ├── integrated_fault_experiments/
+│       ├── persistence_strict_density_ablation/
+│       ├── balanced_two_link_localization/
+│       ├── balanced_two_link_localization_l2_fault/
+│       └── balanced_two_link_localization_link_conditioned/
+│
+├── scripts/
+│   ├── run_balanced_two_link_localization.py
+│   ├── run_integrated_fault_experiments.py
+│   ├── run_persistence_three_way_ablation.py
+│   ├── run_fault_severity_sweep.py
+│   └── ...
+│
+├── src/
+│   └── pd_failslow/
+│       ├── detection/
+│       ├── diagnosis/
+│       ├── evaluation/
+│       ├── faults/
+│       ├── simulator/
+│       ├── telemetry/
+│       ├── utils/
+│       └── workload/
+│
+├── tests/
+├── pyproject.toml
+├── requirements.txt
+└── README.md
 ```
 
-Slowdown in any stage can affect request latency. The objective is to identify abnormal component behaviour while accounting for the workload and execution conditions under which the request was processed.
+`results/final/` contains selected compact experiment evidence. The original experiment directories are retained separately and are not all included in the curated evidence set.
 
-## 4. Project Objectives
+## 7. Installation
 
-1. Model a simplified PD-disaggregated LLM inference system.
-2. Collect stage-level latency, workload characteristics, execution settings, and component-level telemetry.
-3. Establish healthy reference behaviour under different workload conditions.
-4. Detect candidate slowdowns using observed behaviour relative to an appropriate reference.
-5. Attribute detected anomalies to workload changes, execution conditions, interference, or possible component degradation where evidence permits.
-6. Localize suspected faults to prefill workers, decode workers, or KV-cache transfer links.
-7. Evaluate historical, peer-based, and confidence-weighted reference strategies.
-8. Measure detection quality, false alarms, detection delay, localization accuracy, and algorithmic overhead.
+### Requirements
 
-## 5. Proposed Methodology
+- Python 3.10 or later
+- pip
+- Git
 
-The proposed pipeline contains five stages.
+Clone the repository:
 
-### Stage 1: Telemetry Collection
+```bash
+git clone https://github.com/Abhay123921/PD-Fail-Slow-Fault-Detection.git
+cd PD-Fail-Slow-Fault-Detection
+```
 
-Collect request-level and component-level information, including:
+Create and activate a virtual environment:
 
-- Request identifiers and component identifiers.
-- Prompt and output characteristics.
-- Batch size and request arrival conditions.
-- Stage-level and per-hop latency.
-- Execution configuration and relevant system state.
-- Available GPU, operating-system, queue, and network measurements.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-The initial implementation will use a simulator with configurable service-time and capacity models.
+Install dependencies:
 
-### Stage 2: Healthy Reference Estimation
+```bash
+python3 -m pip install -r requirements.txt
+```
 
-Estimate expected behaviour from trusted healthy execution traces and, where appropriate, comparable peer components.
+Install the project in editable mode:
 
-The reference should account for relevant workload and execution characteristics instead of relying exclusively on a single global latency threshold.
+```bash
+python3 -m pip install -e .
+```
 
-Historical and peer observations must be treated cautiously because they may themselves be affected by faults or common-mode degradation.
+## 8. Running Experiments
 
-### Stage 3: Candidate Slowdown Detection
+Run commands from the repository root with the virtual environment activated.
 
-Compare observed latency against the expected latency for the relevant workload and execution conditions.
+### Integrated fault experiments
 
-A robust statistical detector based on the median and Median Absolute Deviation (MAD) is an initial candidate:
+```bash
+python3 scripts/run_integrated_fault_experiments.py
+```
 
-\[
-\operatorname{MAD}=\operatorname{median}_i
-\left(|x_i-\operatorname{median}(x)|\right)
-\]
+### Persistence ablation
 
-A robust deviation score can then be used to identify unusually high latency relative to a reference distribution.
+```bash
+python3 scripts/run_persistence_three_way_ablation.py
+```
 
-The exact threshold, persistence conditions, and treatment of low-confidence observations will be calibrated and evaluated during implementation. A statistical anomaly is a candidate slowdown, not proof of a fault.
+### Balanced two-link localization
 
-### Stage 4: Cause Attribution
+```bash
+python3 scripts/run_balanced_two_link_localization.py
+```
 
-Investigate whether a detected slowdown is more consistent with:
+### Fault severity sweep
 
-- A change in workload characteristics.
-- An execution configuration or resource-contention change.
-- A possible prefill-worker slowdown.
-- A possible decode-worker slowdown.
-- A possible KV-cache transfer bottleneck.
+```bash
+python3 scripts/run_fault_severity_sweep.py
+```
 
-Attribution will use available telemetry and comparisons rather than assuming that latency alone identifies the cause.
+**Experiment prerequisites:** The integrated, persistence, and balanced two-link experiments rely on previously generated healthy-characterization traces. Persistence ablation also requires integrated experiment traces and ground-truth files. The corresponding inputs must exist under the expected `results/` directories before running these scripts.
 
-### Stage 5: Component Localization
+These scripts use fixed configuration and output paths. Back up existing experiment outputs before rerunning them, as generated files may be overwritten.
 
-Use stage-level timings, component observations, and relevant system evidence to identify the most likely affected component.
+## 9. Running Tests
 
-If the evidence is insufficient to distinguish between possible causes, the system should report an uncertain or unresolved diagnosis rather than force a potentially incorrect localization.
+Run the test suite from the repository root:
 
-## 6. Confidence-Weighted References
+```bash
+python3 -m pytest -q
+```
 
-An important direction under investigation is combining historical observations and peer observations according to their reliability and comparability.
+The test suite covers simulation, fault injection, detection, persistence, communication diagnostics, localization, evaluation, and related components.
 
-For example, a reference weight may be represented as:
+## 10. Limitations
 
-\[
-w_s=R_s C_s
-\]
+The current study has the following limitations:
 
-where:
+- The system is simulator-based and has not been validated on physical GPU infrastructure.
+- The simulation uses a deterministic two-pass execution model rather than a fully event-driven serving implementation.
+- Fault localization results are based on a limited set of controlled fault scenarios.
+- Link-conditioned calibration has been evaluated on one PCIe and one NVLink configuration.
+- Unseen link configurations, additional workload distributions, and a broader range of fault severities require further evaluation.
+- Evidence-quality and attribution scores are heuristic and should not be interpreted as calibrated probabilities or causal guarantees.
 
-- \(R_s\) represents the estimated reliability of a source.
-- \(C_s\) represents its comparability to the current workload and execution conditions.
+## 11. Future Work
 
-These weights can contribute to a weighted expected-latency estimate.
+Potential extensions include:
 
-However, confidence weighting is a **proposed technique to evaluate**, not an established improvement. The experiments will compare simple references, static confidence weighting, and dynamic confidence weighting to determine whether the additional complexity is justified.
+- Evaluation on real PD-disaggregated LLM serving infrastructure.
+- Broader workload and fault-severity evaluation.
+- Generalization to unseen communication configurations.
+- More detailed modelling of network contention and KV-cache transfer.
+- Online adaptation of healthy references and anomaly thresholds.
+- Stronger confidence calibration and fault attribution methods.
 
-## 7. Planned Implementation
+## 12. Project Information
 
-The implementation is planned as a modular, simulator-driven prototype.
+**Project:** Workload-Aware Detection and Localization of Fail-Slow Faults in PD-Disaggregated LLM Inference Systems
 
-| Module | Responsibility |
-|---|---|
-| `configs/` | System, workload, and fault configurations |
-| `simulator/` | PD system, workload generation, scheduling, transfer, and fault injection |
-| `telemetry/` | Trace collection, feature extraction, and dataset preparation |
-| `detection/` | Healthy references, anomaly detection, workload attribution, and localization |
-| `evaluation/` | Experiments, detection metrics, localization metrics, and ablation studies |
-| `tests/` | Unit and integration tests |
-| `results/` | Experimental outputs, metrics, and plots |
-| `notebooks/` | Exploratory analysis and visualization |
+**Course:** CS5903 – Distributed AI Training
 
-The simulator will initially approximate component behaviour through configurable service-time and capacity models. It is intended to provide controlled, reproducible traces for evaluating detection methods, rather than to reproduce every detail of real GPU execution.
+**Project ID:** 25
 
-## 8. Fault and Workload Scenarios
+**Group:** 21
 
-The planned evaluation will include:
+**Institution:** Indian Institute of Technology Hyderabad
 
-**Healthy workload variation**
-- Different prompt and output lengths.
-- Different batch sizes and request arrival rates.
-- Changes in execution configuration and interference.
-
-**Injected faults**
-- Slowdown in an individual prefill worker.
-- Slowdown in an individual decode worker.
-- Slowdown in a KV-cache transfer link.
-- Gradual component degradation.
-
-**Difficult diagnosis conditions**
-- Common-mode slowdown affecting multiple peers.
-- Potential contamination of historical references.
-- Workload changes that increase latency without a fault.
-- Cases where available evidence cannot reliably identify one component.
-
-Fault injection will provide independent ground-truth labels for evaluating the proposed methods.
-
-## 9. Evaluation Plan
-
-The project will compare the proposed methods against simpler baselines.
-
-| Method or metric | Purpose |
-|---|---|
-| Fixed-threshold detection | Establish a simple baseline |
-| Historical baseline | Evaluate a component's past behaviour as a reference |
-| Peer comparison | Evaluate comparisons with comparable workers |
-| Static confidence weighting | Test fixed reliability and comparability weights |
-| Dynamic confidence weighting | Test whether updated confidence scores improve results |
-| Precision, recall, and F1-score | Measure detection quality |
-| False-positive rate | Measure false alarms, particularly under healthy workload changes |
-| Detection delay | Measure time from fault injection to detection |
-| Localization accuracy | Measure whether the affected component is correctly identified |
-| Algorithmic overhead | Measure detection and diagnosis time and memory requirements |
-
-Experiments will distinguish development and evaluation data appropriately. Thresholds and parameters will be selected using development or validation data rather than tuned on final test results.
-
-No quantitative performance claims are made at this stage because the planned experiments have not yet been completed.
-
-## 10. Current Progress
-
-### Completed
-
-- Problem definition and analysis.
-- Study of relevant literature and existing approaches.
-- Definition of the PD-disaggregated system model.
-- Identification of workload-induced versus component-induced slowdown.
-- Design of the proposed detection, attribution, and localization pipeline.
-- Identification of telemetry requirements and reference-estimation challenges.
-- Planning of the simulator architecture and evaluation methodology.
-
-### Planned
-
-- Implement the simplified PD simulator and request path.
-- Define the trace schema and generate healthy execution traces.
-- Implement controlled fault injection with ground-truth labels.
-- Implement fixed-threshold, historical, and peer-based detection baselines.
-- Add workload-aware attribution and component localization.
-- Evaluate static and dynamic confidence-weighted references.
-- Report quantitative metrics and comparative experimental results.
-
-## 11. Scope and Limitations
-
-The initial project focuses on **detection and localization** in a simplified PD-disaggregated inference system.
-
-The following are outside the initial implementation scope:
-
-- Automatic mitigation and recovery.
-- Worker rerouting and component quarantine.
-- Production deployment and autoscaling.
-- Full fidelity simulation of every GPU, accelerator, and communication stack.
-- Application-level behavioural monitoring unless a suitable requirement and evaluation method are established.
-
-Simulation results will need to be interpreted within the limits of the simulator. Good performance in controlled experiments does not automatically guarantee the same performance in a real deployment.
-
-## 12. Expected Outcomes
-
-The planned deliverables are:
-
-1. A configurable simulator for a simplified PD-disaggregated inference system.
-2. A trace-generation and telemetry pipeline.
-3. Controlled healthy and faulty execution scenarios.
-4. Baseline slowdown-detection methods.
-5. Workload-aware cause attribution and component localization.
-6. Comparative evaluation of historical, peer-based, and confidence-weighted references.
-7. A reproducible evaluation package containing configurations, code, metrics, and plots.
-
-These are expected outcomes, not completed experimental results.
-
-## 13. Conclusion
-
-This project investigates how fail-slow faults can be detected and localized in PD-disaggregated LLM inference systems despite changing workloads and execution conditions.
-
-Its central principle is that **increased latency should be investigated relative to expected behaviour, not automatically classified as a fault**. By combining workload-aware references, component-level evidence, anomaly detection, cause attribution, and localization, the project aims to build a reproducible framework for evaluating this problem.
-
-The effectiveness of the proposed approach will ultimately be determined by experiments comparing it with simpler detection and reference-estimation methods.
-
----
-
-**Repository:** [PD-Fail-Slow-Fault-Detection](https://github.com/Abhay123921/PD-Fail-Slow-Fault-Detection)
-
-**Keywords:** LLM Inference, Distributed Systems, Prefill-Decode Disaggregation, Fail-Slow Faults, Anomaly Detection, Workload-Aware Monitoring, KV Cache, Fault Localization, System Telemetry.
+**GitHub:** https://github.com/Abhay123921/PD-Fail-Slow-Fault-Detection

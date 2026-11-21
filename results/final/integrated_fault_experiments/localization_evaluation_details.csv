@@ -1,0 +1,4 @@
+fault_type,ground_truth_component_type,ground_truth_component_id,fault_type_found,correct_component_rank,top_1_correct,reciprocal_rank,top_2_correct,top_3_correct
+compute,worker,P1,True,1,True,1.0,True,True
+communication,link,L1,True,1,True,1.0,True,True
+synchronization,worker,D2,True,1,True,1.0,True,True

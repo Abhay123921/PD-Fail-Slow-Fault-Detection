@@ -1,0 +1,3 @@
+scenario,status,is_fault_suspected,fault_type,component_type,component_id,localization_rank,evidence_count,mean_evidence_quality_score,scored_stage_count,total_stage_count,anomalous_observation_count,direct_anomalous_observation_count,persistent_direct_anomaly_count,context_anomalous_observation_count,persistent_context_evidence_count,candidate_fault_types,reason
+healthy,healthy,False,,,,,0,,6,6,0,0,0,0,0,[],all_stages_scored_without_anomalies
+l1_fault,localized_fault,True,communication,link,L1,1.0,498,1.0,6,6,500,500,498,0,0,['communication'],persistent_direct_evidence_supports_component

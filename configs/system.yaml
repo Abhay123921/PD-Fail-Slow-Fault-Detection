@@ -1,0 +1,46 @@
+system:
+  simulation_duration_ms: 60000
+  random_seed: 42
+
+prefill:
+  workers:
+    - id: P1
+      compute_capacity: 1.0
+      memory_capacity: 1.0
+    - id: P2
+      compute_capacity: 1.0
+      memory_capacity: 1.0
+
+decode:
+  workers:
+    - id: D1
+      compute_capacity: 1.0
+      memory_capacity: 1.0
+    - id: D2
+      compute_capacity: 1.0
+      memory_capacity: 1.0
+
+communication:
+  links:
+    - id: L1
+      link_type: PCIe
+      bandwidth_mb_per_ms: 20.0
+      fixed_latency_ms: 0.2
+      shared: true
+    - id: L2
+      link_type: NVLink
+      bandwidth_mb_per_ms: 80.0
+      fixed_latency_ms: 0.05
+      shared: true
+
+scheduler:
+  prefill_policy: shortest_queue
+  decode_policy: shortest_queue
+  link_routes:
+    P1->D1: L1
+    P1->D2: L2
+    P2->D1: L2
+    P2->D2: L1
+
+synchronization:
+  normal_handoff_delay_ms: 0.1

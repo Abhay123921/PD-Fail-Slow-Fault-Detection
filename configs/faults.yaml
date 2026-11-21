@@ -1,0 +1,27 @@
+faults:
+  enabled: true
+
+  compute:
+    - id: F_COMPUTE_1
+      type: prefill_capacity_reduction
+      component_id: P1
+      start_ms: 20000
+      end_ms: 30000
+      severity: 0.40
+
+  communication:
+    - id: F_LINK_1
+      type: bandwidth_reduction
+      component_id: L1
+      start_ms: 35000
+      end_ms: 45000
+      severity: 0.50
+
+  synchronization:
+    - id: F_SYNC_1
+      type: handoff_delay
+      component_id: D2
+      start_ms: 50000
+      end_ms: 55000
+      severity: 0.50
+      max_additional_delay_ms: 10.0

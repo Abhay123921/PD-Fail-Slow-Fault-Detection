@@ -1,0 +1,4 @@
+scenario,l1_rank,l2_rank,top_ranked_component,communication_candidates
+healthy,,,,0
+l1_fault,1.0,,L1,1
+l2_fault,,,,0

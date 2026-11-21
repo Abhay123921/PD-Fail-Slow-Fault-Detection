@@ -1,0 +1,5 @@
+scenario,request_count,target_component_observations,target_component_description,status,is_fault_suspected,diagnosed_fault_type,diagnosed_component_type,diagnosed_component_id,localization_rank,evidence_count,mean_evidence_quality,direct_anomalies,context_anomalies,persistent_context_evidence
+healthy,1000,1000,all requests,healthy,False,,,,,0,,0,0,0
+compute,1000,334,P1 prefill assignments,localized_fault,True,compute,worker,P1,1.0,330,1.0,334,948,944
+communication,1000,1000,L1 transfers,localized_fault,True,communication,link,L1,1.0,996,1.0,1000,0,0
+synchronization,1000,500,D2 decode assignments,localized_fault,True,synchronization,worker,D2,1.0,496,1.0,500,0,0

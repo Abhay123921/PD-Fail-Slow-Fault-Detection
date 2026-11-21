@@ -1,0 +1,2 @@
+fault_count,fault_type_accuracy,component_top_1_accuracy,mean_reciprocal_rank,component_top_2_accuracy,component_top_3_accuracy
+3,1.0,1.0,1.0,1.0,1.0

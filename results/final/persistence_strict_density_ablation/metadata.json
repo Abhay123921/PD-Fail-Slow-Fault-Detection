@@ -1,0 +1,43 @@
+{
+  "experiment": "three_way_persistence_ablation",
+  "training_seed": 42,
+  "calibration_seed": 43,
+  "healthy_holdout_seed": 44,
+  "fault_workload_seed": 45,
+  "boundary_training_seed": 46,
+  "boundary_calibration_seed": 47,
+  "reference_min_samples": 20,
+  "anomaly_quantile": 0.99,
+  "anomaly_min_samples": 100,
+  "persistence_window": 5,
+  "persistence_min_anomalies": 3,
+  "persistence_max_window_duration_ms": 250,
+  "persistence_time_window_density_ms": 500,
+  "persistence_time_window_density_min_anomalies": 3,
+  "persistence_strategies": [
+    "count",
+    "time_aware",
+    "time_window_density",
+    "strict_time_window_density"
+  ],
+  "persistence_require_current_anomaly": true,
+  "confidence_reference_sample_target": 100,
+  "confidence_calibration_sample_target": 500,
+  "reference_strategies": [
+    "workload_conditioned",
+    "global"
+  ],
+  "strategies": [
+    "workload_conditioned_count",
+    "workload_conditioned_time_aware",
+    "workload_conditioned_density_500ms",
+    "global_count",
+    "global_time_aware",
+    "global_density_500ms",
+    "workload_conditioned_strict_density_500ms",
+    "global_strict_density_500ms"
+  ],
+  "evaluation_uses_identical_saved_traces": true,
+  "ground_truth_used_for_detection": false,
+  "simulation_type": "deterministic_two_pass_simulator"
+}

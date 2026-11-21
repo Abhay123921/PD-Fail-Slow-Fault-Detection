@@ -1,0 +1,39 @@
+{
+  "experiment": "integrated_workload_aware_failslow_detection",
+  "reference_training_seed": 42,
+  "anomaly_calibration_seed": 43,
+  "healthy_holdout_seed": 44,
+  "fault_workload_seed": 45,
+  "request_count": 1000,
+  "prompt_tokens": 4096,
+  "output_tokens": 128,
+  "arrival_distribution": "constant",
+  "arrival_rate_per_ms": 0.02,
+  "kv_cache_mb_per_prompt_token": 0.01,
+  "fault_severity": 0.5,
+  "fault_interval_ms": [
+    0.0,
+    1000000.0
+  ],
+  "fault_scenarios": [
+    {
+      "fault_type": "compute",
+      "component": "P1",
+      "severity": 0.5
+    },
+    {
+      "fault_type": "communication",
+      "component": "L1",
+      "severity": 0.5
+    },
+    {
+      "fault_type": "synchronization",
+      "component": "D2",
+      "severity": 0.5,
+      "max_additional_delay_ms": 10.0
+    }
+  ],
+  "detector_inputs": "telemetry_only",
+  "ground_truth_used_for_detection": false,
+  "simulation_type": "deterministic_two_pass_simulator"
+}

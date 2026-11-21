@@ -1,0 +1,13 @@
+scenario,evaluated_fault_type,true_positive,false_positive,true_negative,false_negative,precision,recall,f1_score,specificity,false_positive_rate,accuracy,sample_count
+healthy,compute,0,0,1000,0,0.0,0.0,0.0,1.0,0.0,1.0,1000
+healthy,communication,0,0,1000,0,0.0,0.0,0.0,1.0,0.0,1.0,1000
+healthy,synchronization,0,0,1000,0,0.0,0.0,0.0,1.0,0.0,1.0,1000
+compute,compute,330,0,666,4,1.0,0.9880239520958084,0.9939759036144578,1.0,0.0,0.996,1000
+compute,communication,0,0,1000,0,0.0,0.0,0.0,1.0,0.0,1.0,1000
+compute,synchronization,0,0,1000,0,0.0,0.0,0.0,1.0,0.0,1.0,1000
+communication,compute,0,0,1000,0,0.0,0.0,0.0,1.0,0.0,1.0,1000
+communication,communication,996,0,0,4,1.0,0.996,0.9979959919839679,0.0,0.0,0.996,1000
+communication,synchronization,0,0,1000,0,0.0,0.0,0.0,1.0,0.0,1.0,1000
+synchronization,compute,0,0,1000,0,0.0,0.0,0.0,1.0,0.0,1.0,1000
+synchronization,communication,0,0,1000,0,0.0,0.0,0.0,1.0,0.0,1.0,1000
+synchronization,synchronization,496,0,500,4,1.0,0.992,0.9959839357429718,1.0,0.0,0.996,1000
